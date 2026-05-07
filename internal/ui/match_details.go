@@ -49,10 +49,12 @@ func RenderMatchDetails(cfg MatchDetailsConfig) (headerContent, scrollableConten
 	if homeTeam == "" {
 		homeTeam = details.HomeTeam.Name
 	}
+	homeTeam = localizeEntityName(homeTeam)
 	awayTeam := details.AwayTeam.ShortName
 	if awayTeam == "" {
 		awayTeam = details.AwayTeam.Name
 	}
+	awayTeam = localizeEntityName(awayTeam)
 
 	// Header with optional focus styling using compact header design
 	headerLines = append(headerLines, renderPanelHeader(constants.PanelMatchDetails, cfg.Focused, contentWidth))
@@ -63,7 +65,7 @@ func RenderMatchDetails(cfg MatchDetailsConfig) (headerContent, scrollableConten
 	headerLines = append(headerLines, "")
 
 	// Teams display
-	teamsDisplay := fmt.Sprintf("%s  vs  %s",
+	teamsDisplay := fmt.Sprintf("%s  对  %s",
 		neonTeamStyle.Render(homeTeam),
 		neonTeamStyle.Render(awayTeam))
 	headerLines = append(headerLines, lipgloss.NewStyle().Width(contentWidth).Align(lipgloss.Center).Render(teamsDisplay))
@@ -77,7 +79,7 @@ func RenderMatchDetails(cfg MatchDetailsConfig) (headerContent, scrollableConten
 			Foreground(neonDim).
 			Width(contentWidth).
 			Align(lipgloss.Center).
-			Render("vs")
+			Render("对")
 		headerLines = append(headerLines, vsText)
 	}
 	headerLines = append(headerLines, "")
@@ -99,7 +101,7 @@ func RenderMatchDetails(cfg MatchDetailsConfig) (headerContent, scrollableConten
 		if cfg.ShowHighlights && details.Highlight != nil && details.Highlight.URL != "" {
 			scrollableLines = append(scrollableLines, "")
 			highlightLink := lipgloss.NewStyle().Width(contentWidth).Align(lipgloss.Center).Render(
-				Hyperlink("▶ Official Match Highlights", details.Highlight.URL),
+				Hyperlink("▶ 官方比赛集锦", details.Highlight.URL),
 			)
 			scrollableLines = append(scrollableLines, neonValueStyle.Render(highlightLink))
 		}
@@ -156,7 +158,7 @@ func renderStatusLine(details *api.MatchDetails, contentWidth int) string {
 		statusText = infoStyle.Render(constants.StatusNotStartedShort)
 	}
 
-	leagueText := infoStyle.Italic(true).Render(details.League.Name)
+	leagueText := infoStyle.Italic(true).Render(localizeEntityName(details.League.Name))
 	return lipgloss.NewStyle().
 		Width(contentWidth).
 		Align(lipgloss.Center).
@@ -167,30 +169,30 @@ func renderMatchContext(details *api.MatchDetails, contentWidth int) []string {
 	var lines []string
 
 	if details.League.Name != "" {
-		lines = append(lines, neonLabelStyle.Render("League:      ")+neonValueStyle.Render(details.League.Name))
+		lines = append(lines, neonLabelStyle.Render("联赛：      ")+neonValueStyle.Render(localizeEntityName(details.League.Name)))
 	}
 	if details.Venue != "" {
-		lines = append(lines, neonLabelStyle.Render("Venue:       ")+neonValueStyle.Render(truncateString(details.Venue, contentWidth-14)))
+		lines = append(lines, neonLabelStyle.Render("场地：      ")+neonValueStyle.Render(truncateString(localizeEntityName(details.Venue), contentWidth-14)))
 	}
 	if details.MatchTime != nil {
-		lines = append(lines, neonLabelStyle.Render("Date:        ")+neonValueStyle.Render(details.MatchTime.Format("02 Jan 2006, 15:04")+" UTC"))
+		lines = append(lines, neonLabelStyle.Render("日期：      ")+neonValueStyle.Render(details.MatchTime.Format("2006-01-02 15:04")+" UTC"))
 	}
 	if details.Referee != "" {
-		lines = append(lines, neonLabelStyle.Render("Referee:     ")+neonValueStyle.Render(details.Referee))
+		lines = append(lines, neonLabelStyle.Render("裁判：      ")+neonValueStyle.Render(localizeEntityName(details.Referee)))
 	}
 	if details.Attendance > 0 {
-		lines = append(lines, neonLabelStyle.Render("Attendance:  ")+neonValueStyle.Render(formatNumber(details.Attendance)))
+		lines = append(lines, neonLabelStyle.Render("观众：      ")+neonValueStyle.Render(formatNumber(details.Attendance)))
 	}
 
 	// Half-time score
 	if details.HalfTimeScore != nil && details.HalfTimeScore.Home != nil && details.HalfTimeScore.Away != nil {
-		htText := fmt.Sprintf("HT: %d - %d", *details.HalfTimeScore.Home, *details.HalfTimeScore.Away)
-		lines = append(lines, neonLabelStyle.Render("Half-time:   ")+neonValueStyle.Render(htText))
+		htText := fmt.Sprintf("半场 %d - %d", *details.HalfTimeScore.Home, *details.HalfTimeScore.Away)
+		lines = append(lines, neonLabelStyle.Render("半场：      ")+neonValueStyle.Render(htText))
 	}
 
 	// Extra time
 	if details.ExtraTime {
-		lines = append(lines, neonLabelStyle.Render("Duration:    ")+neonValueStyle.Render("After Extra Time"))
+		lines = append(lines, neonLabelStyle.Render("时长：      ")+neonValueStyle.Render("加时后"))
 	}
 
 	return lines
@@ -205,7 +207,7 @@ func renderPenaltiesSection(details *api.MatchDetails, contentWidth int) []strin
 		Bold(true).
 		Width(contentWidth).
 		Align(lipgloss.Center).
-		Render("PENALTIES")
+		Render("点球大战")
 	lines = append(lines, penaltyHeader)
 
 	penaltyScoreText := fmt.Sprintf("%d - %d", *details.Penalties.Home, *details.Penalties.Away)
@@ -236,12 +238,12 @@ func renderGoalsSection(cfg MatchDetailsConfig, contentWidth int) string {
 
 	var lines []string
 	lines = append(lines, "")
-	lines = append(lines, neonHeaderStyle.Render("Goals"))
+	lines = append(lines, neonHeaderStyle.Render("进球"))
 
 	for _, goal := range goals {
-		player := "Unknown"
+		player := "未知球员"
 		if goal.Player != nil {
-			player = *goal.Player
+			player = localizeEntityName(*goal.Player)
 		}
 		isHome := goal.Team.ID == details.HomeTeam.ID
 
@@ -249,9 +251,9 @@ func renderGoalsSection(cfg MatchDetailsConfig, contentWidth int) string {
 		replayIndicator := getReplayIndicator(details, cfg.GoalLinks, goal.Minute)
 
 		// Use gradient for GOAL or OWN GOAL label
-		label := "GOAL"
+		label := "进球"
 		if goal.OwnGoal != nil && *goal.OwnGoal {
-			label = "OWN GOAL"
+			label = "乌龙球"
 		}
 		styledGoal := design.ApplyGradientToText(label)
 		goalContent := buildEventContent(playerDetails, replayIndicator, "●", styledGoal, isHome)
@@ -281,12 +283,12 @@ func renderCardsSection(cfg MatchDetailsConfig, contentWidth int) string {
 
 	var lines []string
 	lines = append(lines, "")
-	lines = append(lines, neonHeaderStyle.Render("Cards"))
+	lines = append(lines, neonHeaderStyle.Render("牌"))
 
 	for _, card := range cardEvents {
-		player := "Unknown"
+		player := "未知球员"
 		if card.Player != nil {
-			player = *card.Player
+			player = localizeEntityName(*card.Player)
 		}
 		isHome := card.Team.ID == details.HomeTeam.ID
 
@@ -298,7 +300,7 @@ func renderCardsSection(cfg MatchDetailsConfig, contentWidth int) string {
 		}
 
 		playerDetails := neonValueStyle.Render(player)
-		cardContent := buildEventContent(playerDetails, "", cardSymbol, cardStyle.Render("CARD"), isHome)
+		cardContent := buildEventContent(playerDetails, "", cardSymbol, cardStyle.Render("牌"), isHome)
 
 		minuteStr := card.DisplayMinute
 		if minuteStr == "" {
@@ -325,16 +327,16 @@ func renderSubstitutionsSection(cfg MatchDetailsConfig, contentWidth int) string
 
 	var lines []string
 	lines = append(lines, "")
-	lines = append(lines, neonHeaderStyle.Render("Substitutions"))
+	lines = append(lines, neonHeaderStyle.Render("换人"))
 
 	for _, sub := range subs {
 		playerOut := ""
 		if sub.Player != nil {
-			playerOut = *sub.Player
+			playerOut = localizeEntityName(*sub.Player)
 		}
 		playerIn := ""
 		if sub.Assist != nil {
-			playerIn = *sub.Assist
+			playerIn = localizeEntityName(*sub.Assist)
 		}
 		isHome := sub.Team.ID == details.HomeTeam.ID
 		subContent := buildSubstitutionContent(playerIn, playerOut, isHome)
@@ -353,18 +355,18 @@ func renderStatisticsSection(cfg MatchDetailsConfig, contentWidth int, homeTeam,
 	details := cfg.Details
 	var lines []string
 	lines = append(lines, "")
-	lines = append(lines, neonHeaderStyle.Render("Statistics"))
+	lines = append(lines, neonHeaderStyle.Render("数据"))
 
 	wantedStats := []struct {
 		patterns   []string
 		label      string
 		isProgress bool
 	}{
-		{[]string{"possession", "ball possession", "ballpossesion"}, "Possession", true},
-		{[]string{"total_shots", "total shots"}, "Total Shots", false},
-		{[]string{"shots_on_target", "on target", "shotsontarget"}, "Shots on Target", false},
-		{[]string{"accurate_passes", "accurate passes"}, "Accurate Passes", false},
-		{[]string{"fouls", "fouls committed"}, "Fouls", false},
+		{[]string{"possession", "ball possession", "ballpossesion"}, "控球率", true},
+		{[]string{"total_shots", "total shots"}, "射门", false},
+		{[]string{"shots_on_target", "on target", "shotsontarget"}, "射正", false},
+		{[]string{"accurate_passes", "accurate passes"}, "传球成功", false},
+		{[]string{"fouls", "fouls committed"}, "犯规", false},
 	}
 
 	centerStyle := lipgloss.NewStyle().Width(contentWidth).Align(lipgloss.Center)
@@ -405,7 +407,7 @@ func renderLiveUpdatesSection(cfg MatchDetailsConfig, contentWidth int) string {
 	var titleText string
 	if cfg.IsPolling && cfg.Loading && cfg.PollingSpinner != nil {
 		pollingView := cfg.PollingSpinner.View()
-		titleText = "Updating...  " + pollingView
+		titleText = "正在更新...  " + pollingView
 	} else {
 		titleText = constants.PanelUpdates
 	}
@@ -507,7 +509,6 @@ func renderStatComparison(label, homeVal, awayVal string, maxWidth int) string {
 
 	return labelLine + "\n" + barLine
 }
-
 
 func truncateString(s string, maxLen int) string {
 	if maxLen <= 1 {

@@ -158,10 +158,10 @@ func OpenURL(url string) error {
 }
 
 // ReplayLinkIndicator is the visual indicator for replay links.
-const ReplayLinkIndicator = "[▶REPLAY]"
+const ReplayLinkIndicator = "[▶回放]"
 
 // ReplayLinkIndicatorAlt is an alternative ASCII indicator for terminals without emoji.
-const ReplayLinkIndicatorAlt = "[replay]"
+const ReplayLinkIndicatorAlt = "[回放]"
 
 // IsValidReplayURL validates that a URL is a valid HTTP/HTTPS URL and not a marker.
 // Returns true only for valid http:// or https:// URLs.

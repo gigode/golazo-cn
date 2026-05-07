@@ -64,6 +64,7 @@ func NewSettingsState() *SettingsState {
 	l := list.New(items, delegate, 0, 0)
 	l.SetShowTitle(false)
 	l.SetShowStatusBar(true)
+	l.SetStatusBarItemName("个联赛", "个联赛")
 	l.SetFilteringEnabled(true)
 	l.SetShowFilter(true)
 	l.Filter = list.DefaultFilter
@@ -189,7 +190,7 @@ func renderTabBar(regions []string, currentRegion int, width int) string {
 				Padding(0, 2)
 		}
 
-		tabElements = append(tabElements, tabStyle.Render(region))
+		tabElements = append(tabElements, tabStyle.Render(localizeRegion(region)))
 	}
 
 	// Join tabs with separator
@@ -244,9 +245,9 @@ func RenderSettingsView(width, height int, state *SettingsState, bannerType cons
 	selectedCount := state.SelectedCount()
 	var infoText string
 	if selectedCount == 0 {
-		infoText = "No selection = default leagues"
+		infoText = "未选择 = 使用默认联赛"
 	} else {
-		infoText = fmt.Sprintf("%d of %d selected", selectedCount, len(state.AllLeagues))
+		infoText = fmt.Sprintf("已选择 %d / %d", selectedCount, len(state.AllLeagues))
 	}
 	infoStyle := neonDimStyle.Width(settingsBoxWidth).Align(lipgloss.Center)
 	info := infoStyle.Render(infoText)

@@ -23,11 +23,11 @@ func renderStatusBanner(bannerType constants.StatusBannerType, width int) string
 
 	switch bannerType {
 	case constants.StatusBannerDebug:
-		message = "[DEBUG MODE] Logs: ~/.golazo/golazo_debug.log"
+		message = "[调试模式] 日志：~/.golazo/golazo_debug.log"
 	case constants.StatusBannerNewVersion:
-		message = "New Version Available! Run 'golazo --update'"
+		message = "发现新版本！运行 'golazo --update'"
 	case constants.StatusBannerDev:
-		message = "[DEV BUILD] This is a development version"
+		message = "[开发版] 当前是开发版本"
 	case constants.StatusBannerNone:
 		fallthrough
 	default:

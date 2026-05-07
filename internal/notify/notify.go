@@ -12,6 +12,7 @@ import (
 	"github.com/0xjuanma/golazo/internal/assets"
 	"github.com/0xjuanma/golazo/internal/constants"
 	"github.com/0xjuanma/golazo/internal/data"
+	"github.com/0xjuanma/golazo/internal/ui"
 	"github.com/gen2brain/beeep"
 )
 
@@ -99,9 +100,9 @@ func (n *DesktopNotifier) Goal(event api.MatchEvent, homeTeam, awayTeam api.Team
 // formatGoalMessage creates the notification message for a goal.
 // Format: "Scorer (Team) 34' | Home 2-1 Away"
 func formatGoalMessage(event api.MatchEvent, homeTeam, awayTeam api.Team, homeScore, awayScore int) string {
-	scorer := "Unknown"
+	scorer := "未知球员"
 	if event.Player != nil {
-		scorer = *event.Player
+		scorer = ui.LocalizeEntityName(*event.Player)
 	}
 
 	// Determine which team scored
@@ -109,11 +110,21 @@ func formatGoalMessage(event api.MatchEvent, homeTeam, awayTeam api.Team, homeSc
 	if teamName == "" {
 		teamName = event.Team.Name
 	}
+	teamName = ui.LocalizeEntityName(teamName)
 
 	// Build message with assist if available
 	assistText := ""
 	if event.Assist != nil && *event.Assist != "" {
-		assistText = fmt.Sprintf(" (%s)", *event.Assist)
+		assistText = fmt.Sprintf(" (%s)", ui.LocalizeEntityName(*event.Assist))
+	}
+
+	homeName := homeTeam.ShortName
+	if homeName == "" {
+		homeName = homeTeam.Name
+	}
+	awayName := awayTeam.ShortName
+	if awayName == "" {
+		awayName = awayTeam.Name
 	}
 
 	return fmt.Sprintf("%s%s %d' [%s]\n%s %d - %d %s",
@@ -121,9 +132,9 @@ func formatGoalMessage(event api.MatchEvent, homeTeam, awayTeam api.Team, homeSc
 		assistText,
 		event.Minute,
 		teamName,
-		homeTeam.ShortName,
+		ui.LocalizeEntityName(homeName),
 		homeScore,
 		awayScore,
-		awayTeam.ShortName,
+		ui.LocalizeEntityName(awayName),
 	)
 }

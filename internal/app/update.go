@@ -170,6 +170,8 @@ func (m model) handleMatchDetails(msg matchDetailsMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	ui.WarmMatchDetailsTranslations(msg.details)
+
 	// Clear error on success
 	m.lastError = ""
 	m.matchDetails = msg.details
@@ -619,6 +621,8 @@ func (m model) handleLiveMatches(msg liveMatchesMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(cmds...)
 	}
 
+	ui.WarmMatchTranslations(msg.matches)
+
 	// Convert to display format
 	displayMatches := make([]ui.MatchDisplay, 0, len(msg.matches))
 	for _, match := range msg.matches {
@@ -661,6 +665,7 @@ func (m model) handleLiveRefresh(msg liveRefreshMsg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, scheduleLiveRefresh(m.fotmobClient, m.useMockData))
 
 	// Update upcoming matches
+	ui.WarmMatchTranslations(msg.upcoming)
 	upcomingDisplay := make([]ui.MatchDisplay, 0, len(msg.upcoming))
 	for _, match := range msg.upcoming {
 		upcomingDisplay = append(upcomingDisplay, ui.MatchDisplay{Match: match})
@@ -673,6 +678,8 @@ func (m model) handleLiveRefresh(msg liveRefreshMsg) (tea.Model, tea.Cmd) {
 		m.liveMatchesList.SetItems(nil)
 		return m, tea.Batch(cmds...)
 	}
+
+	ui.WarmMatchTranslations(msg.matches)
 
 	// Convert to display format
 	displayMatches := make([]ui.MatchDisplay, 0, len(msg.matches))
@@ -716,12 +723,14 @@ func (m model) handleLiveBatchData(msg liveBatchDataMsg) (tea.Model, tea.Cmd) {
 
 	// Accumulate live matches from this batch
 	if len(msg.matches) > 0 {
+		ui.WarmMatchTranslations(msg.matches)
 		m.liveMatchesBuffer = append(m.liveMatchesBuffer, msg.matches...)
 		m.lastError = ""
 	}
 
 	// Accumulate upcoming matches from this batch
 	if len(msg.upcoming) > 0 {
+		ui.WarmMatchTranslations(msg.upcoming)
 		m.liveUpcomingBuffer = append(m.liveUpcomingBuffer, msg.upcoming...)
 		upcomingDisplay := make([]ui.MatchDisplay, 0, len(m.liveUpcomingBuffer))
 		for _, match := range m.liveUpcomingBuffer {
@@ -819,6 +828,8 @@ func (m model) handleStatsData(msg statsDataMsg) (tea.Model, tea.Cmd) {
 
 	// Store the full stats data for client-side filtering
 	m.statsData = msg.data
+	ui.WarmMatchTranslations(m.statsData.AllFinished)
+	ui.WarmMatchTranslations(m.statsData.TodayUpcoming)
 
 	// Apply the current date range filter
 	m.applyStatsDateFilter()
@@ -868,6 +879,7 @@ func (m model) handleStatsDayData(msg statsDayDataMsg) (tea.Model, tea.Cmd) {
 
 	// Accumulate finished matches (deduplicate by match ID)
 	if len(msg.finished) > 0 {
+		ui.WarmMatchTranslations(msg.finished)
 		// Build a set of existing IDs to avoid duplicates
 		existingIDs := make(map[int]bool)
 		for _, match := range m.statsData.AllFinished {
@@ -902,6 +914,7 @@ func (m model) handleStatsDayData(msg statsDayDataMsg) (tea.Model, tea.Cmd) {
 
 	// Add upcoming matches (only from today), deduplicated by match ID
 	if msg.isToday && len(msg.upcoming) > 0 {
+		ui.WarmMatchTranslations(msg.upcoming)
 		// Build a set of existing IDs to avoid duplicates
 		existingIDs := make(map[int]bool)
 		for _, match := range m.statsData.TodayUpcoming {
@@ -1352,6 +1365,9 @@ func (m model) handleStandings(msg standingsMsg) (tea.Model, tea.Cmd) {
 		m.debugLog("handleStandings: dialogOverlay is nil, skipping dialog")
 		return m, nil
 	}
+
+	ui.WarmEntityTranslations(msg.leagueName)
+	ui.WarmStandingsTranslations(msg.standings)
 
 	m.debugLog(fmt.Sprintf("handleStandings: creating dialog with %d entries", len(msg.standings)))
 	m.standingsCache[msg.leagueID] = &standingsCacheEntry{

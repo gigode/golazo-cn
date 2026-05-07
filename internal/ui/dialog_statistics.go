@@ -14,8 +14,8 @@ import (
 type StatisticsDialog struct {
 	homeTeam    string
 	awayTeam    string
-	homeScore	int
-	awayScore	int
+	homeScore   int
+	awayScore   int
 	statistics  []api.MatchStatistic
 	scrollIndex int
 	maxVisible  int
@@ -26,8 +26,8 @@ func NewStatisticsDialog(homeTeam, awayTeam string, homeScore, awayScore int, st
 	return &StatisticsDialog{
 		homeTeam:    homeTeam,
 		awayTeam:    awayTeam,
-		homeScore:    homeScore,
-		awayScore:    awayScore,
+		homeScore:   homeScore,
+		awayScore:   awayScore,
 		statistics:  statistics,
 		scrollIndex: 0,
 		maxVisible:  20, // Number of stats visible at once (larger dialog)
@@ -70,7 +70,7 @@ func (d *StatisticsDialog) View(width, height int) string {
 // renderContent renders the statistics content.
 func (d *StatisticsDialog) renderContent(width int) string {
 	if len(d.statistics) == 0 {
-		return dialogDimStyle.Render("No statistics available")
+		return dialogDimStyle.Render("暂无比赛数据")
 	}
 
 	var lines []string
@@ -97,7 +97,7 @@ func (d *StatisticsDialog) renderContent(width int) string {
 
 	// Scroll indicator if needed
 	if len(d.statistics) > d.maxVisible {
-		scrollInfo := fmt.Sprintf("(%d-%d of %d)", d.scrollIndex+1, endIdx, len(d.statistics))
+		scrollInfo := fmt.Sprintf("（%d-%d / %d）", d.scrollIndex+1, endIdx, len(d.statistics))
 		lines = append(lines, "")
 		lines = append(lines, dialogDimStyle.Render(scrollInfo))
 	}
@@ -111,10 +111,12 @@ func (d *StatisticsDialog) renderTeamHeader(width int) string {
 	homeTeam := d.homeTeam
 	awayTeam := d.awayTeam
 	maxLen := (width - 10) / 2
+	homeTeam = localizeEntityName(homeTeam)
+	awayTeam = localizeEntityName(awayTeam)
 	homeTeam = truncateString(homeTeam, maxLen)
 	awayTeam = truncateString(awayTeam, maxLen)
 
-	headerText := fmt.Sprintf("%s %d - %d  %s", homeTeam, d.homeScore , d.awayScore, awayTeam)
+	headerText := fmt.Sprintf("%s %d - %d  %s", homeTeam, d.homeScore, d.awayScore, awayTeam)
 	return lipgloss.NewStyle().
 		Width(width).
 		Align(lipgloss.Center).
@@ -134,6 +136,7 @@ func (d *StatisticsDialog) renderStatRow(stat api.MatchStatistic, width int) str
 	if label == "" {
 		label = stat.Key
 	}
+	label = localizeStatLabel(label)
 	maxLabelLen := 20
 	label = truncateString(label, maxLabelLen)
 
@@ -155,11 +158,11 @@ func (d *StatisticsDialog) renderStatRow(stat api.MatchStatistic, width int) str
 		barColor = neonWhite
 	}
 	// Render solid color bars (cyan for home, gray for away)
-	homeBar :=  lipgloss.NewStyle().Foreground(neonGray).Render(strings.Repeat("░", barWidth-homeBarWidth)) +
-				lipgloss.NewStyle().Foreground(barColor).Render(strings.Repeat("█", homeBarWidth))
+	homeBar := lipgloss.NewStyle().Foreground(neonGray).Render(strings.Repeat("░", barWidth-homeBarWidth)) +
+		lipgloss.NewStyle().Foreground(barColor).Render(strings.Repeat("█", homeBarWidth))
 
-	awayBar := 	lipgloss.NewStyle().Foreground(barColor).Render(strings.Repeat("█", awayBarWidth)) +
-				lipgloss.NewStyle().Foreground(neonGray).Render(strings.Repeat("░", barWidth-awayBarWidth))
+	awayBar := lipgloss.NewStyle().Foreground(barColor).Render(strings.Repeat("█", awayBarWidth)) +
+		lipgloss.NewStyle().Foreground(neonGray).Render(strings.Repeat("░", barWidth-awayBarWidth))
 
 	homeBarStyled := lipgloss.NewStyle().Foreground(neonCyan).Render(homeBar)
 	awayBarStyled := lipgloss.NewStyle().Foreground(neonGray).Render(awayBar)
@@ -225,4 +228,3 @@ func calculateBarWidths(home, away float64, maxWidth int) (int, int) {
 
 	return homeWidth, awayWidth
 }
-

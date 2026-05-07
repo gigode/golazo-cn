@@ -10,6 +10,7 @@ import (
 
 	"github.com/0xjuanma/golazo/internal/app"
 	"github.com/0xjuanma/golazo/internal/data"
+	"github.com/0xjuanma/golazo/internal/ui"
 	"github.com/0xjuanma/golazo/internal/version"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -22,12 +23,15 @@ var mockFlag bool
 var updateFlag bool
 var versionFlag bool
 var debugFlag bool
+var uiOnlyFlag bool
 
 var rootCmd = &cobra.Command{
-	Use:   "golazo",
-	Short: "The beautiful game in your terminal",
-	Long:  `A minimal TUI for following football matches in real-time. Get live match updates, finished match statistics, and minute-by-minute events directly in your terminal.`,
+	Use:   commandUseName(),
+	Short: "终端里的足球赛况",
+	Long:  `一个极简的足球实时赛况终端界面。可在终端中查看实时比赛动态、已完赛统计和逐分钟事件。`,
 	Run: func(cmd *cobra.Command, args []string) {
+		ui.SetEntityLocalizationEnabled(!uiOnlyMode())
+
 		if versionFlag {
 			version.Print(Version)
 			return
@@ -67,10 +71,21 @@ var rootCmd = &cobra.Command{
 
 		p := tea.NewProgram(app.New(mockFlag, debugFlag, isDevBuild, newVersionAvailable, Version), tea.WithAltScreen())
 		if _, err := p.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error running application: %v\n", err)
+			fmt.Fprintf(os.Stderr, "应用运行出错：%v\n", err)
 			os.Exit(1)
 		}
 	},
+}
+
+func commandUseName() string {
+	if filepath.Base(os.Args[0]) == "golazo-ui-only" {
+		return "golazo-ui-only"
+	}
+	return "golazo"
+}
+
+func uiOnlyMode() bool {
+	return uiOnlyFlag || filepath.Base(os.Args[0]) == "golazo-ui-only"
 }
 
 // runUpdate executes the appropriate update method based on installation detection.
@@ -79,19 +94,19 @@ func runUpdate() {
 
 	switch installMethod {
 	case "homebrew":
-		fmt.Println("Updating via Homebrew...")
+		fmt.Println("正在通过 Homebrew 更新...")
 		if err := runBrewUpdate(); err != nil {
-			fmt.Fprintf(os.Stderr, "Homebrew update failed: %v\n", err)
-			fmt.Println("Falling back to install script...")
+			fmt.Fprintf(os.Stderr, "Homebrew 更新失败：%v\n", err)
+			fmt.Println("正在改用安装脚本更新...")
 			if err := runScriptUpdate(); err != nil {
-				fmt.Fprintf(os.Stderr, "Update failed: %v\n", err)
+				fmt.Fprintf(os.Stderr, "更新失败：%v\n", err)
 				os.Exit(1)
 			}
 		}
 	default: // "script"
-		fmt.Println("Updating via install script...")
+		fmt.Println("正在通过安装脚本更新...")
 		if err := runScriptUpdate(); err != nil {
-			fmt.Fprintf(os.Stderr, "Update failed: %v\n", err)
+			fmt.Fprintf(os.Stderr, "更新失败：%v\n", err)
 			os.Exit(1)
 		}
 	}
@@ -112,7 +127,7 @@ func runBrewUpdate() error {
 		//      permissions) fires after a successful upgrade+link.
 		// In both cases the formula was built successfully; attempt a forced
 		// re-link before giving up and falling back to the script.
-		fmt.Println("Attempting brew link recovery...")
+		fmt.Println("正在尝试修复 Homebrew 链接...")
 		linkCmd := exec.Command("brew", "link", "--overwrite", "0xjuanma/tap/golazo")
 		linkCmd.Stdout = os.Stdout
 		linkCmd.Stderr = os.Stderr
@@ -189,8 +204,22 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().BoolVar(&mockFlag, "mock", false, "Use mock data for all views instead of real API data")
-	rootCmd.Flags().BoolVar(&debugFlag, "debug", false, "Enable debug logging to ~/.golazo/golazo_debug.log")
-	rootCmd.Flags().BoolVarP(&updateFlag, "update", "u", false, "Update golazo to the latest version")
-	rootCmd.Flags().BoolVarP(&versionFlag, "version", "v", false, "Display version information")
+	rootCmd.Flags().BoolVar(&mockFlag, "mock", false, "所有视图使用模拟数据，不请求真实 API")
+	rootCmd.Flags().BoolVar(&debugFlag, "debug", false, "启用调试日志，写入 ~/.golazo/golazo_debug.log")
+	rootCmd.Flags().BoolVar(&uiOnlyFlag, "ui-only", false, "只翻译界面文案，球队/球员/联赛/球场/裁判名保留原文")
+	rootCmd.Flags().BoolVarP(&updateFlag, "update", "u", false, "将 golazo 更新到最新版本")
+	rootCmd.Flags().BoolVarP(&versionFlag, "version", "v", false, "显示版本信息")
+	rootCmd.SetUsageTemplate(`用法：
+  {{.UseLine}}{{if .HasAvailableFlags}}
+
+选项：
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}
+`)
+	rootCmd.SetHelpTemplate(`{{with (or .Long .Short)}}{{. | trimTrailingWhitespaces}}
+
+{{end}}{{.UsageString}}`)
+	rootCmd.InitDefaultHelpFlag()
+	if helpFlag := rootCmd.Flags().Lookup("help"); helpFlag != nil {
+		helpFlag.Usage = "显示帮助信息"
+	}
 }

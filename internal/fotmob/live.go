@@ -121,11 +121,11 @@ func (p *LiveUpdateParser) ParseEvents(events []api.MatchEvent, homeTeam, awayTe
 
 // Event type prefixes for visual identification (used by UI for coloring)
 const (
-	EventPrefixGoal        = "●" // Solid circle - goals (red)
-	EventPrefixYellowCard  = "▪" // Square - yellow card (cyan)
-	EventPrefixRedCard     = "■" // Filled square - red card (red)
+	EventPrefixGoal         = "●" // Solid circle - goals (red)
+	EventPrefixYellowCard   = "▪" // Square - yellow card (cyan)
+	EventPrefixRedCard      = "■" // Filled square - red card (red)
 	EventPrefixSubstitution = "↔" // Arrow - substitution (dim)
-	EventPrefixOther       = "·" // Small dot - other events (dim)
+	EventPrefixOther        = "·" // Small dot - other events (dim)
 )
 
 // formatEvent formats a single event into a readable string with symbol prefix and label.
@@ -146,7 +146,7 @@ func (p *LiveUpdateParser) formatEvent(event api.MatchEvent, homeTeam, awayTeam 
 
 	switch strings.ToLower(event.Type) {
 	case "goal":
-		player := "Unknown"
+		player := "未知球员"
 		if event.Player != nil {
 			player = *event.Player
 		}
@@ -157,7 +157,7 @@ func (p *LiveUpdateParser) formatEvent(event api.MatchEvent, homeTeam, awayTeam 
 		return fmt.Sprintf("%s %d' %s %s %s", EventPrefixGoal, event.Minute, label, player, teamMarker)
 
 	case "card":
-		player := "Unknown"
+		player := "未知球员"
 		if event.Player != nil {
 			player = *event.Player
 		}
@@ -173,8 +173,8 @@ func (p *LiveUpdateParser) formatEvent(event api.MatchEvent, homeTeam, awayTeam 
 
 	case "substitution":
 		// Player = player going out, Assist = player coming in (repurposed)
-		playerOut := "Unknown"
-		playerIn := "Unknown"
+		playerOut := "未知球员"
+		playerIn := "未知球员"
 		if event.Player != nil && *event.Player != "" {
 			playerOut = *event.Player
 		}

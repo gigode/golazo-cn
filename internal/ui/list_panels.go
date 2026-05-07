@@ -104,10 +104,12 @@ func renderUpcomingMatchLine(match MatchDisplay, maxWidth int) string {
 	if homeTeam == "" {
 		homeTeam = match.HomeTeam.Name
 	}
+	homeTeam = localizeEntityName(homeTeam)
 	awayTeam := match.AwayTeam.ShortName
 	if awayTeam == "" {
 		awayTeam = match.AwayTeam.Name
 	}
+	awayTeam = localizeEntityName(awayTeam)
 
 	maxTeamLen := (maxWidth - 15) / 2
 	if len(homeTeam) > maxTeamLen {
@@ -117,7 +119,7 @@ func renderUpcomingMatchLine(match MatchDisplay, maxWidth int) string {
 		awayTeam = awayTeam[:maxTeamLen-1] + "…"
 	}
 
-	return fmt.Sprintf("  %s  %s vs %s",
+	return fmt.Sprintf("  %s  %s 对 %s",
 		neonDimStyle.Render(timeStr),
 		neonValueStyle.Render(homeTeam),
 		neonValueStyle.Render(awayTeam))
@@ -137,7 +139,7 @@ func RenderStatsListPanel(width, height int, finishedList list.Model, dateRange 
 
 	var finishedListView string
 	if len(finishedList.Items()) == 0 {
-		finishedListView = emptyStyle.Render(constants.EmptyNoFinishedMatches + "\n\nTry selecting a different date range (h/l keys)")
+		finishedListView = emptyStyle.Render(constants.EmptyNoFinishedMatches + "\n\n可尝试用 h/l 切换日期范围")
 	} else {
 		finishedListView = finishedList.View()
 	}
@@ -170,9 +172,9 @@ func renderDateRangeSelector(width int, selected int) string {
 		days  int
 		label string
 	}{
-		{1, "Today"},
-		{3, "3d"},
-		{5, "5d"},
+		{1, "今天"},
+		{3, "3天"},
+		{5, "5天"},
 	}
 
 	items := make([]string, 0, len(options))
@@ -211,12 +213,12 @@ func RenderMultiPanelViewWithList(width, height int, listModel list.Model, detai
 		spinnerView := randomSpinner.View()
 		var progressText string
 		if totalLeagues > 0 && leaguesLoaded < totalLeagues {
-			progressText = fmt.Sprintf("  Scanning batch %d/%d...", leaguesLoaded+1, totalLeagues)
+			progressText = fmt.Sprintf("  正在扫描批次 %d/%d...", leaguesLoaded+1, totalLeagues)
 		}
 		if spinnerView != "" {
 			spinnerArea = spinnerStyle.Render(spinnerView + progressText)
 		} else {
-			spinnerArea = spinnerStyle.Render("Loading..." + progressText)
+			spinnerArea = spinnerStyle.Render("加载中..." + progressText)
 		}
 	} else {
 		spinnerArea = spinnerStyle.Render("")
@@ -277,12 +279,12 @@ func RenderStatsViewWithList(width, height int, finishedList list.Model, details
 		spinnerView := randomSpinner.View()
 		var progressText string
 		if totalDays > 0 && daysLoaded < totalDays {
-			progressText = fmt.Sprintf("  Loading day %d/%d...", daysLoaded+1, totalDays)
+			progressText = fmt.Sprintf("  正在加载第 %d/%d 天...", daysLoaded+1, totalDays)
 		}
 		if spinnerView != "" {
 			spinnerArea = spinnerStyle.Render(spinnerView + progressText)
 		} else {
-			spinnerArea = spinnerStyle.Render("Loading..." + progressText)
+			spinnerArea = spinnerStyle.Render("加载中..." + progressText)
 		}
 	} else {
 		spinnerArea = spinnerStyle.Render("")
@@ -386,7 +388,7 @@ func renderStatsMatchDetailsPanel(width, height int, details *api.MatchDetails, 
 			Align(lipgloss.Center).
 			Width(width - 6).
 			PaddingTop(height / 4).
-			Render("Select a match to view details")
+			Render("请选择一场比赛查看详情")
 
 		emptyPanel := neonPanelCyanStyle.
 			Width(width).

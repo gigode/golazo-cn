@@ -18,11 +18,13 @@ func (m MatchDisplay) Title() string {
 	if home == "" {
 		home = m.HomeTeam.Name
 	}
+	home = localizeEntityName(home)
 	away := m.AwayTeam.ShortName
 	if away == "" {
 		away = m.AwayTeam.Name
 	}
-	return home + " vs " + away
+	away = localizeEntityName(away)
+	return home + " 对 " + away
 }
 
 // Description returns a formatted description for the match.
@@ -37,7 +39,7 @@ func (m MatchDisplay) Description() string {
 
 	// Add league name
 	if m.League.Name != "" {
-		parts = append(parts, m.League.Name)
+		parts = append(parts, localizeEntityName(m.League.Name))
 	}
 
 	// Add live time
@@ -49,7 +51,7 @@ func (m MatchDisplay) Description() string {
 
 	// Add start time (kick-off time) on second line
 	if m.MatchTime != nil {
-		return line1 + "\nKO " + m.MatchTime.Local().Format("15:04")
+		return line1 + "\n开球 " + m.MatchTime.Local().Format("15:04")
 	}
 
 	return line1

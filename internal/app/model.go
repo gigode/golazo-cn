@@ -73,10 +73,10 @@ type model struct {
 	statsTotalDays  int // Total days to load (5)
 
 	// Progressive loading state (live view) - batch-based for parallel fetching
-	liveBatchesLoaded   int         // Number of batches loaded so far
-	liveTotalBatches    int         // Total batches to load
-	liveMatchesBuffer   []api.Match // Buffer to accumulate live matches during progressive load
-	liveUpcomingBuffer  []api.Match // Buffer to accumulate upcoming matches during progressive load
+	liveBatchesLoaded  int         // Number of batches loaded so far
+	liveTotalBatches   int         // Total batches to load
+	liveMatchesBuffer  []api.Match // Buffer to accumulate live matches during progressive load
+	liveUpcomingBuffer []api.Match // Buffer to accumulate upcoming matches during progressive load
 
 	// UI components
 	spinner          spinner.Model
@@ -175,6 +175,7 @@ func New(useMockData bool, debugMode bool, isDevBuild bool, newVersionAvailable 
 	liveList := list.New([]list.Item{}, delegate, 0, 0)
 	liveList.SetShowTitle(false)
 	liveList.SetShowStatusBar(true)
+	liveList.SetStatusBarItemName("场比赛", "场比赛")
 	liveList.SetFilteringEnabled(true)
 	liveList.SetShowFilter(true)
 	liveList.Filter = list.DefaultFilter // Required for filtering to work
@@ -185,6 +186,7 @@ func New(useMockData bool, debugMode bool, isDevBuild bool, newVersionAvailable 
 	statsList := list.New([]list.Item{}, delegate, 0, 0)
 	statsList.SetShowTitle(false)
 	statsList.SetShowStatusBar(true)
+	statsList.SetStatusBarItemName("场比赛", "场比赛")
 	statsList.SetFilteringEnabled(true)
 	statsList.SetShowFilter(true)
 	statsList.Filter = list.DefaultFilter // Required for filtering to work
@@ -193,7 +195,7 @@ func New(useMockData bool, debugMode bool, isDevBuild bool, newVersionAvailable 
 	statsList.FilterInput.Cursor.Style = filterCursorStyle
 	statsList.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{
-			key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "focus")),
+			key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "聚焦")),
 		}
 	}
 
@@ -204,6 +206,7 @@ func New(useMockData bool, debugMode bool, isDevBuild bool, newVersionAvailable 
 	upcomingList := list.New([]list.Item{}, delegate, 0, 0)
 	upcomingList.SetShowTitle(false)
 	upcomingList.SetShowStatusBar(true)
+	upcomingList.SetStatusBarItemName("场比赛", "场比赛")
 	upcomingList.SetFilteringEnabled(true)
 	upcomingList.SetShowFilter(true)
 	upcomingList.Filter = list.DefaultFilter // Required for filtering to work

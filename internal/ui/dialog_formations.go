@@ -65,7 +65,7 @@ func (d *FormationsDialog) View(width, height int) string {
 
 	// Build the content
 	content := d.renderFormations(dialogWidth - 6)
-	return RenderDialogFrameWithHelp("Formations", content, constants.HelpFormationsDialog, dialogWidth, dialogHeight)
+	return RenderDialogFrameWithHelp("阵容", content, constants.HelpFormationsDialog, dialogWidth, dialogHeight)
 }
 
 // renderFormations renders both team formations side by side.
@@ -95,6 +95,7 @@ func (d *FormationsDialog) renderTeamPanel(teamName, formation string, players [
 	}
 
 	// Truncate team name if needed
+	teamName = localizeEntityName(teamName)
 	teamName = truncateString(teamName, width-2)
 
 	header := headerStyle.Render(teamName)
@@ -103,7 +104,7 @@ func (d *FormationsDialog) renderTeamPanel(teamName, formation string, players [
 	// Formation string
 	formationStr := formation
 	if formationStr == "" {
-		formationStr = "Formation N/A"
+		formationStr = "阵型暂无"
 	}
 	formationLine := dialogDimStyle.Width(width).Align(lipgloss.Center).Render(formationStr)
 	lines = append(lines, formationLine)
@@ -114,7 +115,7 @@ func (d *FormationsDialog) renderTeamPanel(teamName, formation string, players [
 
 	// Player list
 	if len(players) == 0 {
-		noData := dialogDimStyle.Width(width).Align(lipgloss.Center).Render("Lineup not available")
+		noData := dialogDimStyle.Width(width).Align(lipgloss.Center).Render("暂无首发阵容")
 		lines = append(lines, noData)
 	} else {
 		for _, player := range players {
@@ -146,6 +147,7 @@ func (d *FormationsDialog) renderPlayerLine(player api.PlayerInfo, width int, fo
 	// Player name (truncated if needed)
 	nameWidth := width - 14 // Account for number, position, rating badge, spacing
 	name := player.Name
+	name = localizeEntityName(name)
 	name = truncateString(name, nameWidth)
 	name = fmt.Sprintf("%-*s", nameWidth, name)
 

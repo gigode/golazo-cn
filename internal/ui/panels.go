@@ -186,12 +186,14 @@ func renderStyledLiveUpdate(update string, contentWidth int, details *api.MatchD
 	switch symbol {
 	case "●": // Goal - gradient
 		// Check for own goal marker in the update string
-		label := "GOAL"
+		marker := "[GOAL]"
+		label := "进球"
 		if strings.Contains(contentWithoutMinute, "[OWN GOAL]") {
-			label = "OWN GOAL"
+			marker = "[OWN GOAL]"
+			label = "乌龙球"
 		}
-		marker := fmt.Sprintf("[%s]", label)
 		playerDetails, _ := extractPlayerAndType(contentWithoutMinute, marker)
+		playerDetails = localizeEntityName(playerDetails)
 		styledType := design.ApplyGradientToText(label)
 		styledPlayer := whiteStyle.Render(playerDetails)
 
@@ -207,11 +209,13 @@ func renderStyledLiveUpdate(update string, contentWidth int, details *api.MatchD
 	case "▪": // Yellow card
 		cardStyle := lipgloss.NewStyle().Foreground(neonYellow).Bold(true)
 		playerDetails, _ := extractPlayerAndType(contentWithoutMinute, "[CARD]")
-		styledContent = buildEventContent(whiteStyle.Render(playerDetails), "", symbol, cardStyle.Render("CARD"), isHome)
+		playerDetails = localizeEntityName(playerDetails)
+		styledContent = buildEventContent(whiteStyle.Render(playerDetails), "", symbol, cardStyle.Render("牌"), isHome)
 	case "■": // Red card
 		cardStyle := lipgloss.NewStyle().Foreground(neonRed).Bold(true)
 		playerDetails, _ := extractPlayerAndType(contentWithoutMinute, "[CARD]")
-		styledContent = buildEventContent(whiteStyle.Render(playerDetails), "", symbol, cardStyle.Render("CARD"), isHome)
+		playerDetails = localizeEntityName(playerDetails)
+		styledContent = buildEventContent(whiteStyle.Render(playerDetails), "", symbol, cardStyle.Render("牌"), isHome)
 	case "↔": // Substitution
 		styledContent = renderSubstitutionWithColorsNoMinute(contentWithoutMinute, isHome)
 	case "·": // Other
@@ -255,13 +259,13 @@ func buildSubstitutionContent(playerIn, playerOut string, isHome bool) string {
 	outStyle := lipgloss.NewStyle().Foreground(neonRed)
 	inStyle := lipgloss.NewStyle().Foreground(neonCyan)
 	if playerIn == "" {
-		playerIn = "Unknown"
+		playerIn = "未知球员"
 	}
 	if playerOut == "" {
-		playerOut = "Unknown"
+		playerOut = "未知球员"
 	}
 	playerDetails := inStyle.Render("←"+playerIn) + " " + outStyle.Render("→"+playerOut)
-	return buildEventContent(playerDetails, "", "↔", dimStyle.Render("SUB"), isHome)
+	return buildEventContent(playerDetails, "", "↔", dimStyle.Render("换人"), isHome)
 }
 
 // renderSubstitutionWithColorsNoMinute renders a substitution from a live-update string (with {OUT}/{IN} markers).
@@ -274,6 +278,8 @@ func renderSubstitutionWithColorsNoMinute(update string, isHome bool) string {
 	}
 	playerOut := strings.TrimSpace(update[outIdx+5 : inIdx])
 	playerIn := strings.TrimSpace(update[inIdx+4:])
+	playerOut = localizeEntityName(playerOut)
+	playerIn = localizeEntityName(playerIn)
 	return buildSubstitutionContent(playerIn, playerOut, isHome)
 }
 

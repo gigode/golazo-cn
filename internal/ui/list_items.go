@@ -20,17 +20,17 @@ type LeagueListItem struct {
 
 // Title returns the league name with selection indicator.
 func (l LeagueListItem) Title() string {
-	return l.League.Name
+	return localizeEntityName(l.League.Name)
 }
 
 // Description returns the country.
 func (l LeagueListItem) Description() string {
-	return l.League.Country
+	return localizeCountry(l.League.Country)
 }
 
 // FilterValue returns the value used for filtering (league name + country).
 func (l LeagueListItem) FilterValue() string {
-	return l.League.Name + " " + l.League.Country
+	return l.League.Name + " " + localizeEntityName(l.League.Name) + " " + l.League.Country + " " + localizeCountry(l.League.Country)
 }
 
 // Title returns the match title for the list item.
@@ -44,7 +44,7 @@ func (m MatchListItem) Description() string {
 }
 
 // FilterValue returns the value to use for filtering.
-// Returns team names for searching (e.g., "Arsenal vs Chelsea").
+// Returns team names for searching.
 func (m MatchListItem) FilterValue() string {
 	return m.Title()
 }

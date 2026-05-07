@@ -59,13 +59,13 @@ func (d *StandingsDialog) View(width, height int) string {
 	// Build the table content
 	content := d.renderTable(dialogWidth - 6) // Account for padding and border
 
-	return RenderDialogFrameWithHelp(d.leagueName+" Standings", content, constants.HelpStandingsDialog, dialogWidth, dialogHeight)
+	return RenderDialogFrameWithHelp(localizeEntityName(d.leagueName)+" 积分榜", content, constants.HelpStandingsDialog, dialogWidth, dialogHeight)
 }
 
 // renderTable renders the standings table.
 func (d *StandingsDialog) renderTable(width int) string {
 	if len(d.standings) == 0 {
-		return dialogDimStyle.Render("No standings data available")
+		return dialogDimStyle.Render("暂无积分榜数据")
 	}
 
 	var lines []string
@@ -102,13 +102,13 @@ func (d *StandingsDialog) renderHeaderRow(width int) string {
 	return lipgloss.JoinHorizontal(lipgloss.Top,
 		dialogHeaderStyle.Width(standingsColPos).Align(lipgloss.Right).Render("#"),
 		"  ",
-		dialogHeaderStyle.Width(teamWidth).Align(lipgloss.Left).Render("Team"),
-		dialogHeaderStyle.Width(standingsColStat).Align(lipgloss.Right).Render("P"),
-		dialogHeaderStyle.Width(standingsColStat).Align(lipgloss.Right).Render("W"),
-		dialogHeaderStyle.Width(standingsColStat).Align(lipgloss.Right).Render("D"),
-		dialogHeaderStyle.Width(standingsColStat).Align(lipgloss.Right).Render("L"),
-		dialogHeaderStyle.Width(standingsColGD).Align(lipgloss.Right).Render("GD"),
-		dialogHeaderStyle.Width(standingsColPts).Align(lipgloss.Right).Render("Pts"),
+		dialogHeaderStyle.Width(teamWidth).Align(lipgloss.Left).Render("球队"),
+		dialogHeaderStyle.Width(standingsColStat).Align(lipgloss.Right).Render("赛"),
+		dialogHeaderStyle.Width(standingsColStat).Align(lipgloss.Right).Render("胜"),
+		dialogHeaderStyle.Width(standingsColStat).Align(lipgloss.Right).Render("平"),
+		dialogHeaderStyle.Width(standingsColStat).Align(lipgloss.Right).Render("负"),
+		dialogHeaderStyle.Width(standingsColGD).Align(lipgloss.Right).Render("净"),
+		dialogHeaderStyle.Width(standingsColPts).Align(lipgloss.Right).Render("分"),
 	)
 }
 
@@ -123,6 +123,7 @@ func (d *StandingsDialog) renderTeamRow(entry api.LeagueTableEntry, width int) s
 	if teamName == "" {
 		teamName = entry.Team.Name
 	}
+	teamName = localizeEntityName(teamName)
 	teamName = truncateString(teamName, teamWidth-1)
 
 	// Format goal difference with sign
