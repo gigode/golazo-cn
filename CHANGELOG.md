@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- **Homebrew Update** - Fixed `golazo -u` falling back to the install script when brew successfully built the new version but failed the link step due to a conflicting binary
 
 ## [0.24.0] - 2026-05-03
 
