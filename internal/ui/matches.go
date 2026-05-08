@@ -14,16 +14,8 @@ type MatchDisplay struct {
 
 // Title returns a formatted title for the match.
 func (m MatchDisplay) Title() string {
-	home := m.HomeTeam.ShortName
-	if home == "" {
-		home = m.HomeTeam.Name
-	}
-	home = localizeEntityName(home)
-	away := m.AwayTeam.ShortName
-	if away == "" {
-		away = m.AwayTeam.Name
-	}
-	away = localizeEntityName(away)
+	home := localizeTeamName(m.HomeTeam.ShortName, m.HomeTeam.Name)
+	away := localizeTeamName(m.AwayTeam.ShortName, m.AwayTeam.Name)
 	return home + " 对 " + away
 }
 

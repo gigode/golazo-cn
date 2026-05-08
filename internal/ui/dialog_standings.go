@@ -119,11 +119,7 @@ func (d *StandingsDialog) renderTeamRow(entry api.LeagueTableEntry, width int) s
 	teamWidth := width - standingsColPos - (standingsColStat * 4) - standingsColGD - standingsColPts - 4
 
 	// Truncate team name if needed
-	teamName := entry.Team.ShortName
-	if teamName == "" {
-		teamName = entry.Team.Name
-	}
-	teamName = localizeEntityName(teamName)
+	teamName := localizeTeamName(entry.Team.ShortName, entry.Team.Name)
 	teamName = truncateString(teamName, teamWidth-1)
 
 	// Format goal difference with sign

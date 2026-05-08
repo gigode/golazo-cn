@@ -106,11 +106,7 @@ func formatGoalMessage(event api.MatchEvent, homeTeam, awayTeam api.Team, homeSc
 	}
 
 	// Determine which team scored
-	teamName := event.Team.ShortName
-	if teamName == "" {
-		teamName = event.Team.Name
-	}
-	teamName = ui.LocalizeEntityName(teamName)
+	teamName := ui.LocalizeTeamName(event.Team.ShortName, event.Team.Name)
 
 	// Build message with assist if available
 	assistText := ""
@@ -118,23 +114,14 @@ func formatGoalMessage(event api.MatchEvent, homeTeam, awayTeam api.Team, homeSc
 		assistText = fmt.Sprintf(" (%s)", ui.LocalizeEntityName(*event.Assist))
 	}
 
-	homeName := homeTeam.ShortName
-	if homeName == "" {
-		homeName = homeTeam.Name
-	}
-	awayName := awayTeam.ShortName
-	if awayName == "" {
-		awayName = awayTeam.Name
-	}
-
 	return fmt.Sprintf("%s%s %d' [%s]\n%s %d - %d %s",
 		scorer,
 		assistText,
 		event.Minute,
 		teamName,
-		ui.LocalizeEntityName(homeName),
+		ui.LocalizeTeamName(homeTeam.ShortName, homeTeam.Name),
 		homeScore,
 		awayScore,
-		ui.LocalizeEntityName(awayName),
+		ui.LocalizeTeamName(awayTeam.ShortName, awayTeam.Name),
 	)
 }

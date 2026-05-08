@@ -100,16 +100,8 @@ func renderUpcomingMatchLine(match MatchDisplay, maxWidth int) string {
 		timeStr = "--:--"
 	}
 
-	homeTeam := match.HomeTeam.ShortName
-	if homeTeam == "" {
-		homeTeam = match.HomeTeam.Name
-	}
-	homeTeam = localizeEntityName(homeTeam)
-	awayTeam := match.AwayTeam.ShortName
-	if awayTeam == "" {
-		awayTeam = match.AwayTeam.Name
-	}
-	awayTeam = localizeEntityName(awayTeam)
+	homeTeam := localizeTeamName(match.HomeTeam.ShortName, match.HomeTeam.Name)
+	awayTeam := localizeTeamName(match.AwayTeam.ShortName, match.AwayTeam.Name)
 
 	maxTeamLen := (maxWidth - 15) / 2
 	if len(homeTeam) > maxTeamLen {

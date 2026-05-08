@@ -32,6 +32,12 @@ func LocalizeEntityName(name string) string {
 	return localizeEntityName(name)
 }
 
+// LocalizeTeamName returns a Chinese team display name, preferring the short
+// name when it has a real translation and falling back to the full team name.
+func LocalizeTeamName(shortName, fullName string) string {
+	return localizeTeamName(shortName, fullName)
+}
+
 // WarmEntityTranslations preloads Chinese translations for entity names.
 // It is intentionally bounded so large match lists do not create unbounded network traffic.
 func WarmEntityTranslations(names ...string) {
@@ -50,7 +56,7 @@ func WarmEntityTranslations(names ...string) {
 		unique = append(unique, name)
 	}
 
-	const maxWarmTranslations = 80
+	const maxWarmTranslations = 240
 	if len(unique) > maxWarmTranslations {
 		unique = unique[:maxWarmTranslations]
 	}
@@ -148,6 +154,29 @@ func localizeEntityName(name string) string {
 	return entityTranslator.Translate(name)
 }
 
+func localizeTeamName(shortName, fullName string) string {
+	displayName := strings.TrimSpace(shortName)
+	fullName = strings.TrimSpace(fullName)
+	if displayName == "" {
+		displayName = fullName
+	}
+	if displayName == "" || !entityLocalizationEnabled {
+		return displayName
+	}
+
+	translatedDisplay := localizeEntityName(displayName)
+	if translatedDisplay != displayName {
+		return translatedDisplay
+	}
+	if fullName != "" && fullName != displayName {
+		translatedFullName := localizeEntityName(fullName)
+		if translatedFullName != fullName {
+			return translatedFullName
+		}
+	}
+	return translatedDisplay
+}
+
 type translatorCache struct {
 	UpdatedAt    time.Time         `json:"updated_at"`
 	Translations map[string]string `json:"translations"`
@@ -224,8 +253,14 @@ func (t *entityTranslatorClient) Translate(name string) string {
 	t.mu.Unlock()
 
 	translated := t.fetch(name)
-	if translated == "" {
-		translated = name
+	if translated == "" || translated == name {
+		t.mu.Lock()
+		delete(t.inflight, name)
+		t.mu.Unlock()
+
+		call.value = name
+		close(call.done)
+		return name
 	}
 
 	t.mu.Lock()
@@ -280,7 +315,7 @@ func (t *entityTranslatorClient) load() {
 
 	t.mu.Lock()
 	for source, translated := range disk.Translations {
-		if source != "" && translated != "" {
+		if source != "" && translated != "" && source != translated {
 			t.cache[source] = translated
 		}
 	}
@@ -388,18 +423,24 @@ var entityNameTranslations = map[string]string{
 	"Brasileirão Série B":                "巴乙",
 	"Brentford":                          "布伦特福德",
 	"Brighton & Hove Albion":             "布莱顿",
+	"Bukayo Saka":                        "萨卡",
 	"Bundesliga":                         "德甲",
 	"Burnley":                            "伯恩利",
 	"CAF Champions League":               "非洲冠军联赛",
+	"Beijing Guoan":                      "北京国安",
 	"CONCACAF Champions Cup":             "中北美冠军杯",
 	"CONCACAF Gold Cup":                  "中北美金杯赛",
 	"CONCACAF Nations League":            "中北美国联",
 	"Carioca":                            "里约州锦标赛",
+	"Changchun Yatai":                    "长春亚泰",
+	"Chengdu Rongcheng":                  "成都蓉城",
 	"Chelsea":                            "切尔西",
 	"Chinese FA Cup":                     "中国足协杯",
 	"Chinese League One":                 "中甲",
 	"Chinese Super League":               "中超",
 	"Club Friendlies":                    "俱乐部友谊赛",
+	"Calhanoglu":                         "恰尔汗奥卢",
+	"Cole Palmer":                        "帕尔默",
 	"Copa America":                       "美洲杯",
 	"Copa Colombia":                      "哥伦比亚杯",
 	"Copa Libertadores":                  "解放者杯",
@@ -409,7 +450,11 @@ var entityNameTranslations = map[string]string{
 	"Coppa Italia":                       "意大利杯",
 	"Coupe de France":                    "法国杯",
 	"Crystal Palace":                     "水晶宫",
+	"Dalian Yingbo":                      "大连英博",
 	"DFB Pokal":                          "德国杯",
+	"De Bruyne":                          "德布劳内",
+	"Dembele":                            "登贝莱",
+	"Diaz":                               "迪亚斯",
 	"EFL Championship":                   "英冠",
 	"EFL League One":                     "英甲",
 	"EFL League Two":                     "英乙",
@@ -422,12 +467,20 @@ var entityNameTranslations = map[string]string{
 	"FIFA Club World Cup":                "世俱杯",
 	"FIFA World Cup":                     "世界杯",
 	"Finalissima":                        "欧美杯",
+	"Foden":                              "福登",
 	"Frauen-Bundesliga":                  "德国女足甲级联赛",
 	"Fulham":                             "富勒姆",
+	"Haaland":                            "哈兰德",
+	"Heung-Min Son":                      "孙兴慜",
+	"Henan FC":                           "河南队",
 	"Indian Super League":                "印度超",
 	"International Friendlies":           "国际友谊赛",
 	"J. League":                          "J 联赛",
+	"Jude Bellingham":                    "贝林厄姆",
 	"K League 1":                         "K 联赛 1",
+	"Kane":                               "凯恩",
+	"Kevin De Bruyne":                    "德布劳内",
+	"Kvaratskhelia":                      "克瓦拉茨赫利亚",
 	"La Liga":                            "西甲",
 	"League of Ireland First Division":   "爱尔兰甲级联赛",
 	"League of Ireland Premier Division": "爱尔兰超级联赛",
@@ -440,17 +493,36 @@ var entityNameTranslations = map[string]string{
 	"Liga Profesional":                   "阿根廷职业联赛",
 	"Ligue 1":                            "法甲",
 	"Ligue 2":                            "法乙",
+	"Lautaro":                            "劳塔罗",
+	"Lewandowski":                        "莱万多夫斯基",
 	"Liverpool":                          "利物浦",
+	"Maddison":                           "麦迪逊",
+	"Man City":                           "曼城",
+	"Man Utd":                            "曼联",
 	"MLS":                                "美职联",
 	"Manchester City":                    "曼城",
 	"Manchester United":                  "曼联",
+	"Martin Ødegaard":                    "厄德高",
+	"Mbappe":                             "姆巴佩",
+	"Meizhou Hakka":                      "梅州客家",
 	"Mineiro":                            "米内罗州锦标赛",
+	"Modric":                             "莫德里奇",
+	"Mohamed Salah":                      "萨拉赫",
+	"Morata":                             "莫拉塔",
+	"Muller":                             "穆勒",
+	"Musiala":                            "穆西亚拉",
 	"NWSL":                               "美国女足联赛",
 	"Newcastle United":                   "纽卡斯尔联",
 	"Nordeste":                           "巴西东北杯",
+	"Nottm Forest":                       "诺丁汉森林",
 	"Nottingham Forest":                  "诺丁汉森林",
+	"Nunez":                              "努涅斯",
+	"Odegaard":                           "厄德高",
 	"Old Trafford":                       "老特拉福德",
+	"Osimhen":                            "奥斯梅恩",
+	"Palmer":                             "帕尔默",
 	"Paulista":                           "圣保罗州锦标赛",
+	"Pedri":                              "佩德里",
 	"Premier League":                     "英超",
 	"Premier Soccer League":              "南非超级联赛",
 	"Primera A":                          "哥伦比亚甲级联赛",
@@ -458,16 +530,26 @@ var entityNameTranslations = map[string]string{
 	"Primera Division":                   "甲级联赛",
 	"Primeira Liga":                      "葡超",
 	"Primeira Liga Qualification":        "葡超附加赛",
+	"Qingdao Hainiu":                     "青岛海牛",
+	"Qingdao West Coast":                 "青岛西海岸",
 	"Qatar Stars League":                 "卡塔尔星联赛",
 	"Recopa Sudamericana":                "南美优胜者杯",
 	"Regionalliga":                       "德国地区联赛",
+	"Rodrygo":                            "罗德里戈",
 	"Russian Premier League":             "俄超",
+	"Saka":                               "萨卡",
+	"Salah":                              "萨拉赫",
 	"Saudi Pro League":                   "沙特职业联赛",
 	"Scottish Premiership":               "苏超",
 	"Selhurst Park":                      "塞尔赫斯特公园球场",
 	"Serie A":                            "意甲",
 	"Serie A Femminile":                  "意大利女足甲级联赛",
 	"Serie B":                            "意乙",
+	"Shandong Taishan":                   "山东泰山",
+	"Shanghai Port":                      "上海海港",
+	"Shanghai Shenhua":                   "上海申花",
+	"Shenzhen Peng City":                 "深圳新鹏城",
+	"Son":                                "孙兴慜",
 	"St. James' Park":                    "圣詹姆斯公园球场",
 	"Stamford Bridge":                    "斯坦福桥",
 	"Sunderland":                         "桑德兰",
@@ -480,19 +562,29 @@ var entityNameTranslations = map[string]string{
 	"Taça da Liga":                       "葡萄牙联赛杯",
 	"Taça de Portugal":                   "葡萄牙杯",
 	"Tottenham Hotspur":                  "托特纳姆热刺",
+	"Spurs":                              "热刺",
+	"Tianjin Jinmen Tiger":               "天津津门虎",
 	"UEFA Champions League":              "欧冠",
 	"UEFA Conference League":             "欧协联",
 	"UEFA Euro":                          "欧洲杯",
 	"UEFA Europa League":                 "欧联杯",
 	"UEFA Nations League":                "欧国联",
 	"Ukrainian Premier League":           "乌克兰超",
+	"Vinicius Jr":                        "维尼修斯",
+	"Vinícius Júnior":                    "维尼修斯",
+	"Watkins":                            "沃特金斯",
 	"West Ham United":                    "西汉姆联",
+	"Williams":                           "威廉姆斯",
 	"Women's DFB Pokal":                  "德国女足杯",
 	"Women's FIFA World Cup":             "女足世界杯",
 	"Women's Super League":               "英格兰女超",
 	"Women's UEFA Champions League":      "女足欧冠",
 	"Women's UEFA Euro":                  "女足欧洲杯",
+	"Wolves":                             "狼队",
 	"Wolverhampton Wanderers":            "狼队",
+	"Wuhan Three Towns":                  "武汉三镇",
+	"Yunnan Yukun":                       "云南玉昆",
+	"Zhejiang Professional":              "浙江队",
 }
 
 func localizeCountry(country string) string {

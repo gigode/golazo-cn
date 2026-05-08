@@ -45,16 +45,8 @@ func RenderMatchDetails(cfg MatchDetailsConfig) (headerContent, scrollableConten
 	var scrollableLines []string
 
 	// Team names
-	homeTeam := details.HomeTeam.ShortName
-	if homeTeam == "" {
-		homeTeam = details.HomeTeam.Name
-	}
-	homeTeam = localizeEntityName(homeTeam)
-	awayTeam := details.AwayTeam.ShortName
-	if awayTeam == "" {
-		awayTeam = details.AwayTeam.Name
-	}
-	awayTeam = localizeEntityName(awayTeam)
+	homeTeam := localizeTeamName(details.HomeTeam.ShortName, details.HomeTeam.Name)
+	awayTeam := localizeTeamName(details.AwayTeam.ShortName, details.AwayTeam.Name)
 
 	// Header with optional focus styling using compact header design
 	headerLines = append(headerLines, renderPanelHeader(constants.PanelMatchDetails, cfg.Focused, contentWidth))

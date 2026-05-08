@@ -1331,14 +1331,8 @@ func (m *model) openFormationsDialog() {
 	}
 
 	// Get team names
-	homeTeam := m.matchDetails.HomeTeam.ShortName
-	if homeTeam == "" {
-		homeTeam = m.matchDetails.HomeTeam.Name
-	}
-	awayTeam := m.matchDetails.AwayTeam.ShortName
-	if awayTeam == "" {
-		awayTeam = m.matchDetails.AwayTeam.Name
-	}
+	homeTeam := ui.LocalizeTeamName(m.matchDetails.HomeTeam.ShortName, m.matchDetails.HomeTeam.Name)
+	awayTeam := ui.LocalizeTeamName(m.matchDetails.AwayTeam.ShortName, m.matchDetails.AwayTeam.Name)
 
 	dialog := ui.NewFormationsDialog(
 		homeTeam,
@@ -1401,14 +1395,8 @@ func (m *model) openStatisticsDialog() {
 	}
 
 	// Get team names
-	homeTeam := m.matchDetails.HomeTeam.ShortName
-	if homeTeam == "" {
-		homeTeam = m.matchDetails.HomeTeam.Name
-	}
-	awayTeam := m.matchDetails.AwayTeam.ShortName
-	if awayTeam == "" {
-		awayTeam = m.matchDetails.AwayTeam.Name
-	}
+	homeTeam := ui.LocalizeTeamName(m.matchDetails.HomeTeam.ShortName, m.matchDetails.HomeTeam.Name)
+	awayTeam := ui.LocalizeTeamName(m.matchDetails.AwayTeam.ShortName, m.matchDetails.AwayTeam.Name)
 
 	dialog := ui.NewStatisticsDialog(
 		homeTeam,
