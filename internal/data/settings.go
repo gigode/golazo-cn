@@ -131,7 +131,9 @@ var AllSupportedLeagues = map[string][]LeagueInfo{
 		{ID: 9478, Name: "Indian Super League", Country: "India"},
 		{ID: 223, Name: "J. League", Country: "Japan"},
 		{ID: 9080, Name: "K League 1", Country: "South Korea"},
+		{ID: 120, Name: "Chinese Super League", Country: "China"},
 		{ID: 9137, Name: "Chinese League One", Country: "China"},
+		{ID: 9550, Name: "Chinese FA Cup", Country: "China"},
 		{ID: 535, Name: "Qatar Stars League", Country: "Qatar"},
 		// Oceania
 		{ID: 113, Name: "A-League", Country: "Australia"},
