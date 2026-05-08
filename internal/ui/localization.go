@@ -61,21 +61,12 @@ func WarmEntityTranslations(names ...string) {
 		unique = unique[:maxWarmTranslations]
 	}
 
-	sem := make(chan struct{}, 8)
-	var wg sync.WaitGroup
 	for _, name := range unique {
 		if _, ok := entityNameTranslations[name]; ok || shouldSkipMachineTranslation(name) {
 			continue
 		}
-		wg.Add(1)
-		go func(name string) {
-			defer wg.Done()
-			sem <- struct{}{}
-			defer func() { <-sem }()
-			_ = LocalizeEntityName(name)
-		}(name)
+		_ = entityTranslator.TranslateCachedOrQueue(name)
 	}
-	wg.Wait()
 }
 
 func WarmMatchTranslations(matches []api.Match) {
@@ -151,7 +142,7 @@ func localizeEntityName(name string) string {
 	if translated, ok := entityNameTranslations[name]; ok {
 		return translated
 	}
-	return entityTranslator.Translate(name)
+	return entityTranslator.TranslateCachedOrQueue(name)
 }
 
 func localizeTeamName(shortName, fullName string) string {
@@ -188,6 +179,7 @@ type entityTranslatorClient struct {
 	mu       sync.RWMutex
 	cache    map[string]string
 	inflight map[string]*translationCall
+	sem      chan struct{}
 	path     string
 }
 
@@ -203,7 +195,50 @@ func newEntityTranslator() *entityTranslatorClient {
 		},
 		cache:    make(map[string]string),
 		inflight: make(map[string]*translationCall),
+		sem:      make(chan struct{}, 4),
 	}
+}
+
+func (t *entityTranslatorClient) TranslateCachedOrQueue(name string) string {
+	if shouldSkipMachineTranslation(name) {
+		return name
+	}
+
+	t.once.Do(t.load)
+
+	t.mu.RLock()
+	if translated, ok := t.cache[name]; ok {
+		t.mu.RUnlock()
+		if translated != "" {
+			return translated
+		}
+		return name
+	}
+	if _, ok := t.inflight[name]; ok {
+		t.mu.RUnlock()
+		return name
+	}
+	t.mu.RUnlock()
+
+	call := &translationCall{done: make(chan struct{})}
+
+	t.mu.Lock()
+	if translated, ok := t.cache[name]; ok {
+		t.mu.Unlock()
+		if translated != "" {
+			return translated
+		}
+		return name
+	}
+	if _, ok := t.inflight[name]; ok {
+		t.mu.Unlock()
+		return name
+	}
+	t.inflight[name] = call
+	t.mu.Unlock()
+
+	go t.finishTranslation(name, call)
+	return name
 }
 
 func (t *entityTranslatorClient) Translate(name string) string {
@@ -252,6 +287,19 @@ func (t *entityTranslatorClient) Translate(name string) string {
 	t.inflight[name] = call
 	t.mu.Unlock()
 
+	t.finishTranslation(name, call)
+	if call.value != "" {
+		return call.value
+	}
+	return name
+}
+
+func (t *entityTranslatorClient) finishTranslation(name string, call *translationCall) {
+	if t.sem != nil {
+		t.sem <- struct{}{}
+		defer func() { <-t.sem }()
+	}
+
 	translated := t.fetch(name)
 	if translated == "" || translated == name {
 		t.mu.Lock()
@@ -260,7 +308,7 @@ func (t *entityTranslatorClient) Translate(name string) string {
 
 		call.value = name
 		close(call.done)
-		return name
+		return
 	}
 
 	t.mu.Lock()
@@ -272,7 +320,6 @@ func (t *entityTranslatorClient) Translate(name string) string {
 	close(call.done)
 
 	t.save()
-	return translated
 }
 
 func shouldSkipMachineTranslation(name string) bool {
